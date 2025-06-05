@@ -1,18 +1,21 @@
 import os
-
+import arabic_reshaper
+from bidi.algorithm import get_display
 from CSVtoNPZ import process_single_csv_to_npz
 from TCLtoCSV import parse_tcl_to_csv
 from TrainGRU import train_and_save, load_data
 import numpy as np
 from sklearn.metrics import mean_absolute_error, mean_squared_error
 from tensorflow.keras.models import load_model
-from sklearn.model_selection import train_test_split
 from sklearn.metrics import r2_score
 import matplotlib.pyplot as plt
 
 
 def mean_absolute_percentage_error(y_true, y_pred):
     return np.mean(np.abs((y_true - y_pred) / y_true)) * 100
+
+def farsi(text):
+    return get_display(arabic_reshaper.reshape(text))
 
 if __name__ == '__main__':
     tcl_folder = './data/tcl_files'
@@ -50,7 +53,7 @@ if __name__ == '__main__':
         os.makedirs(os.path.dirname(model_file), exist_ok=True)
 
         print("Loading training data...")
-        X_train, Y_train = load_data(train_file)
+        X_train, Y_train, min_train_vals, max_train_vals = load_data(train_file)
         print(f"Train: X={X_train.shape}, Y={Y_train.shape}")
 
         print("Training model...")
@@ -61,12 +64,16 @@ if __name__ == '__main__':
 
     # --------------------------Last test the model--------------------------------------
     print("Loading test data...")
-    X_test, Y_test = load_data(test_file)
-    print(f"Test: X={X_test.shape}, Y={Y_test.shape}")
+    X_test, Y_test_normal, min_test_vals, max_test_vals = load_data(test_file)
+    print(f"Test: X={X_test.shape}, Y={Y_test_normal.shape}")
 
     print("Evaluating model...")
     model = load_model(model_file, compile=False)
-    Y_pred = model.predict(X_test)
+    Y_pred_normal = model.predict(X_test)
+
+    # Denormalize
+    Y_pred = Y_pred_normal * (max_test_vals - min_test_vals + 1e-8) + min_test_vals
+    Y_test = Y_test_normal * (max_test_vals - min_test_vals + 1e-8) + min_test_vals
 
     # ------------------------ Evaluation Metrics ----------------------------------------
     mae_x = mean_absolute_error(Y_test[:, 0], Y_pred[:, 0])
@@ -91,31 +98,40 @@ if __name__ == '__main__':
     print(f"R² Score: x={r2_x:.2f}, y={r2_y:.2f}")
 
     # ------------------------------ Charts-------------------------------------------
-    plt.hist(distances, bins=50, color='skyblue', edgecolor='black')
-    plt.title("Histogram of Euclidean Errors")
-    plt.xlabel("Error (meters)")
-    plt.ylabel("Frequency")
-    plt.grid(True)
-    plt.show()
+    fig1, ax = plt.subplots(figsize=(12, 6))
+    ax.hist(distances, bins=50, color='blue', edgecolor='white')
+    ax.set_title(farsi("نمودار فراوانی خطای اقلیدسی"))
+    ax.set_xlabel(farsi("خطا (متر)"))
+    ax.set_ylabel(farsi("تعداد نمونه‌ها"))
+    ax.grid(True)
+    plt.tight_layout()
+    plt.savefig("./histogram_euclidean_error.png")
+    plt.close()
 
-    ks = np.arange(0, 500, 10)
+    ks = np.arange(0, 100, 1)
     accuracies = [np.mean(distances < k) * 100 for k in ks]
-    plt.plot(ks, accuracies, marker='o')
-    plt.title("Accuracy@K")
-    plt.xlabel("Distance Threshold (meters)")
-    plt.ylabel("Accuracy (%)")
-    plt.grid(True)
-    plt.show()
 
-    plt.figure(figsize=(10, 6))
-    plt.scatter(Y_test[:100, 0], Y_test[:100, 1], label='Actual', c='blue', alpha=0.6)
-    plt.scatter(Y_pred[:100, 0], Y_pred[:100, 1], label='Predicted', c='red', alpha=0.6)
-    plt.legend()
-    plt.title("Actual vs. Predicted Positions (First 100 samples)")
-    plt.xlabel("X Position")
-    plt.ylabel("Y Position")
-    plt.grid(True)
-    plt.show()
+    fig2, ax = plt.subplots(figsize=(12, 6))
+    ax.plot(ks, accuracies, marker='o')
+    ax.set_title(farsi("دقت پیش‌بینی در فواصل مختلف"))
+    ax.set_xlabel(farsi("آستانه فاصله (متر)"))
+    ax.set_ylabel(farsi("دقت پیش‌بینی (%)"))
+    ax.grid(True)
+    plt.tight_layout()
+    plt.savefig("./accuracy_at_k.png")
+    plt.close()
+
+    fig3, ax = plt.subplots(figsize=(12, 6))
+    ax.scatter(Y_test[:100, 0], Y_test[:100, 1], label=farsi('مقدار واقعی'), c='blue', alpha=0.6)
+    ax.scatter(Y_pred[:100, 0], Y_pred[:100, 1], label=farsi('مقدار پیش‌بینی‌شده'), c='red', alpha=0.6)
+    ax.legend()
+    ax.set_title(farsi("مقایسه موقعیت واقعی و پیش‌بینی‌شده (100 نمونه اول)"))
+    ax.set_xlabel(farsi("موقعیت X"))
+    ax.set_ylabel(farsi("موقعیت Y"))
+    ax.grid(True)
+    plt.tight_layout()
+    plt.savefig("./actual_vs_predicted_positions.png")
+    plt.close()
 
 
 
