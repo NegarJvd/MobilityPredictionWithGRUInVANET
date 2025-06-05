@@ -22,8 +22,8 @@ if __name__ == '__main__':
     csv_folder = './data/csv_files'
     npz_folder = './data/npz_files'
     sequence_length = 10
-    train_file = './data/npz_files/mobility_120.npz'
-    test_file = './data/npz_files/mobility_60.npz'
+    train_file = './data/npz_files/mobility_60.npz'
+    test_file = './data/npz_files/mobility_50.npz'
     model_file = './models/gru_position_predictor.h5'
 
     #--------------------- First make csv files from tcl for using in GRU------------------
@@ -83,7 +83,7 @@ if __name__ == '__main__':
     distances = np.sqrt(np.sum((Y_test - Y_pred) ** 2, axis=1))
     mean_dist = np.mean(distances)
     max_dist = np.max(distances)
-    p_at_50 = np.mean(distances < 50) * 100
+    p_at_30 = np.mean(distances < 30) * 100
     mape_x = mean_absolute_percentage_error(Y_test[:, 0], Y_pred[:, 0])
     mape_y = mean_absolute_percentage_error(Y_test[:, 1], Y_pred[:, 1])
     r2_x = r2_score(Y_test[:, 0], Y_pred[:, 0])
@@ -93,7 +93,7 @@ if __name__ == '__main__':
     print(f"RMSE: x={rmse_x:.2f}, y={rmse_y:.2f}")
     print(f"Mean Euclidean Distance: {mean_dist:.2f}")
     print(f"Max Euclidean Distance: {max_dist:.2f}")
-    print(f"Percentage of predictions < 50 meters error: {p_at_50:.2f}%")
+    print(f"Percentage of predictions < 30 meters error: {p_at_30:.2f}%")
     print(f"MAPE: x={mape_x:.2f}%, y={mape_y:.2f}%")
     print(f"R² Score: x={r2_x:.2f}, y={r2_y:.2f}")
 
@@ -108,7 +108,7 @@ if __name__ == '__main__':
     plt.savefig("./histogram_euclidean_error.png")
     plt.close()
 
-    ks = np.arange(0, 100, 1)
+    ks = np.arange(0, 300, 10)
     accuracies = [np.mean(distances < k) * 100 for k in ks]
 
     fig2, ax = plt.subplots(figsize=(12, 6))
