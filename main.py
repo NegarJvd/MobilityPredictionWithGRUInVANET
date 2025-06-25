@@ -100,12 +100,12 @@ if __name__ == '__main__':
     # ------------------------------ Charts-------------------------------------------
     fig1, ax = plt.subplots(figsize=(12, 6))
     ax.hist(distances, bins=50, color='blue', edgecolor='white')
-    ax.set_title(farsi("نمودار فراوانی خطای اقلیدسی"))
+    # ax.set_title(farsi("نمودار فراوانی خطای اقلیدسی"))
     ax.set_xlabel(farsi("خطا (متر)"))
     ax.set_ylabel(farsi("تعداد نمونه‌ها"))
     ax.grid(True)
     plt.tight_layout()
-    plt.savefig("./histogram_euclidean_error.png")
+    plt.savefig("./histogram_euclidean_error.png", transparent=True)
     plt.close()
 
     ks = np.arange(0, 300, 10)
@@ -113,24 +113,24 @@ if __name__ == '__main__':
 
     fig2, ax = plt.subplots(figsize=(12, 6))
     ax.plot(ks, accuracies, marker='o')
-    ax.set_title(farsi("دقت پیش‌بینی در فواصل مختلف"))
+    # ax.set_title(farsi("دقت پیش‌بینی در فواصل مختلف"))
     ax.set_xlabel(farsi("آستانه فاصله (متر)"))
     ax.set_ylabel(farsi("دقت پیش‌بینی (%)"))
     ax.grid(True)
     plt.tight_layout()
-    plt.savefig("./accuracy_at_k.png")
+    plt.savefig("./accuracy_at_k.png", transparent=True)
     plt.close()
 
     fig3, ax = plt.subplots(figsize=(12, 6))
     ax.scatter(Y_test[:100, 0], Y_test[:100, 1], label=farsi('مقدار واقعی'), c='blue', alpha=0.6)
     ax.scatter(Y_pred[:100, 0], Y_pred[:100, 1], label=farsi('مقدار پیش‌بینی‌شده'), c='red', alpha=0.6)
     ax.legend()
-    ax.set_title(farsi("مقایسه موقعیت واقعی و پیش‌بینی‌شده (100 نمونه اول)"))
+    # ax.set_title(farsi("مقایسه موقعیت واقعی و پیش‌بینی‌شده (100 نمونه اول)"))
     ax.set_xlabel(farsi("موقعیت X"))
     ax.set_ylabel(farsi("موقعیت Y"))
     ax.grid(True)
     plt.tight_layout()
-    plt.savefig("./actual_vs_predicted_positions.png")
+    plt.savefig("./actual_vs_predicted_positions.png", transparent=True)
     plt.close()
 
 
